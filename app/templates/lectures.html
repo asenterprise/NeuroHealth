@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lectures</title>
+</head>
+<body>
+
+    <h2>Submit a Lecture and Split into Sections</h2>
+    <form id="lectureForm">
+        <label for="title">Title:</label><br>
+        <input type="text" id="title" name="title" required><br><br>
+
+        <label for="content">Content:</label><br>
+        <textarea id="content" name="content" rows="4" required></textarea><br><br>
+
+        <button type="button" onclick="submitLecture()">Submit Lecture</button>
+    </form>
+
+    
+    <script>
+        async function submitLecture() {
+            const form = document.getElementById('lectureForm');
+            const formData = new FormData(form);
+        
+            try {
+                // Всегда подставляем lecture_id = 1
+                formData.set('lecture_id', '1');
+        
+                const response = await fetch('/lectures-ui/parse', {
+                    method: 'POST',
+                    body: formData
+                });
+        
+                if (!response.ok) {
+                    throw new Error("Failed to parse the lecture!");
+                }
+        
+                const html = await response.text();
+                document.open();
+                document.write(html);
+                document.close();
+        
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+        </script>
+        
+
+</body>
+</html>

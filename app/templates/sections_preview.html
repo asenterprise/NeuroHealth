@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Preview</title>
+</head>
+<body>
+    <h1>Lecture Structure Preview</h1>
+    <h2>{{ title }}</h2>
+
+    <form id="saveSectionsForm">
+        <input type="hidden" name="lecture_id" value="{{ lecture_id }}">
+
+        <table border="1">
+            <tr>
+                <th>#</th>
+                <th>Title</th>
+                <th>Level</th>
+                <th>Level 1</th>
+                <th>Level 2</th>
+                <th>Level 3</th>
+                <th>Level 4</th>
+                <th>Content</th>
+            </tr>
+            {% for section in sections %}
+            <tr>
+                <td>
+                    <input type="hidden" name="section_numbers[]" value="{{ section.number }}">
+                    {{ section.number }}
+                </td>
+                <td><input type="text" name="titles[]" value="{{ section.title }}" required></td>
+                <td><input type="number" name="levels[]" value="{{ section.level }}"></td>
+                <td><input type="text" name="level_1[]" value="{{ section.level_1 }}"></td>
+                <td><input type="text" name="level_2[]" value="{{ section.level_2 }}"></td>
+                <td><input type="text" name="level_3[]" value="{{ section.level_3 }}"></td>
+                <td><input type="text" name="level_4[]" value="{{ section.level_4 }}"></td>
+                <td><textarea name="texts[]" rows="2">{{ section.content }}</textarea></td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <button type="button" id="previewJsonButton">Download JSON</button>
+        <button type="button" id="saveToDatabaseButton">Save to Database</button>
+    </form>
+
+    <script>
+        console.log("sections_preview.html loaded");
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const previewButton = document.getElementById("previewJsonButton");
+            const saveButton = document.getElementById("saveToDatabaseButton");
+
+            previewButton.addEventListener("click", function () {
+                const jsonData = getJsonFromForm();
+                const newWindow = window.open();
+                const blob = new Blob([jsonData], {type: 'application/json'});
+                const url = URL.createObjectURL(blob);
+                const a = newWindow.document.createElement('a');
+                a.href = url;
+                a.download = 'data.json';
+                newWindow.document.body.appendChild(a);
+                a.click();
+
+                setTimeout(() => {
+                    URL.revokeObjectURL(url);
+                    newWindow.close();
+                }, 100);
+            });
+
+            saveButton.addEventListener("click", async function () {
+                const jsonData = getJsonFromForm();
+
+                try {
+                    let response = await fetch('/sections/save', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: jsonData
+                    });
+
+                    if (!response.ok) {
+                        throw new Error("Error saving to database!");
+                    }
+
+                    alert("Saved successfully!");
+                } catch (error) {
+                    console.error("Error:", error.message);
+                    alert(error.message);
+                }
+            });
+
+            function getJsonFromForm() {
+                const form = document.getElementById("saveSectionsForm");
+                const formData = new FormData(form);
+                const data = {};
+
+                formData.forEach((value, key) => {
+                    if (!data[key]) {
+                        data[key] = [];
+                    }
+                    data[key].push(value);
+                });
+
+                return JSON.stringify(data, null, 4);
+            }
+        });
+    </script>
+</body>
+</html>
