@@ -45,30 +45,35 @@
     </form>
 
     <script>
-        console.log("sections_preview.html loaded");
+        console.log("sections_preview.html загружен!");
 
         document.addEventListener("DOMContentLoaded", function () {
             const previewButton = document.getElementById("previewJsonButton");
             const saveButton = document.getElementById("saveToDatabaseButton");
 
             previewButton.addEventListener("click", function () {
+                console.log("Кнопка Открыть JSON нажата!");
                 const jsonData = getJsonFromForm();
                 const newWindow = window.open();
-                const blob = new Blob([jsonData], {type: 'application/json'});
-                const url = URL.createObjectURL(blob);
-                const a = newWindow.document.createElement('a');
-                a.href = url;
-                a.download = 'data.json';
-                newWindow.document.body.appendChild(a);
-                a.click();
+                // Создаем и автоматически скачиваем файл
+    const blob = new Blob([jsonData], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = newWindow.document.createElement('a');
+    a.href = url;
+    a.download = 'data.json';
+    newWindow.document.body.appendChild(a);
+    a.click();
 
-                setTimeout(() => {
-                    URL.revokeObjectURL(url);
-                    newWindow.close();
-                }, 100);
+    // Очистка
+    setTimeout(() => {
+        URL.revokeObjectURL(url);
+        newWindow.close();
+    }, 100)
+
             });
 
             saveButton.addEventListener("click", async function () {
+                console.log("Кнопка Сохранить в БД нажата!");
                 const jsonData = getJsonFromForm();
 
                 try {
@@ -79,12 +84,12 @@
                     });
 
                     if (!response.ok) {
-                        throw new Error("Error saving to database!");
+                        throw new Error("Ошибка при сохранении в БД!");
                     }
 
-                    alert("Saved successfully!");
+                    alert("Сохранено успешно!");
                 } catch (error) {
-                    console.error("Error:", error.message);
+                    console.error("Ошибка:", error.message);
                     alert(error.message);
                 }
             });

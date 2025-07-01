@@ -21,32 +21,53 @@
     
     <script>
         async function submitLecture() {
-            const form = document.getElementById('lectureForm');
-            const formData = new FormData(form);
-        
-            try {
-                // Всегда подставляем lecture_id = 1
-                formData.set('lecture_id', '1');
-        
-                const response = await fetch('/lectures-ui/parse', {
-                    method: 'POST',
-                    body: formData
-                });
-        
-                if (!response.ok) {
-                    throw new Error("Failed to parse the lecture!");
-                }
-        
-                const html = await response.text();
-                document.open();
-                document.write(html);
-                document.close();
-        
-            } catch (error) {
-                alert(error.message);
-            }
+    const form = document.getElementById('lectureForm');
+    const formData = new FormData(form);
+
+    try {
+        // 1. Send lecture to /lectures-ui/add
+        let response = await fetch('/lectures-ui/add', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to save the lecture!");
         }
-        </script>
+
+        let result = await response.json(); // Expect {"lecture_id": 123}
+        let lectureId = result.lecture_id;
+
+        if (!lectureId) {
+            throw new Error("Failed to get lecture ID!");
+        }
+
+        // 2. Add lecture_id to formData and send to /lectures-ui/parse
+        formData.append('lecture_id', lectureId);
+
+        response = await fetch('/lectures-ui/parse', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to split the lecture into sections!");
+        }
+
+        // 3. Load the page with section preview (sections_preview.html)
+        let html = await response.text();
+
+        // Clear the page and write new HTML
+        document.open();
+        document.write(html);
+        document.close();
+
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
+    </script>
         
 
 </body>
