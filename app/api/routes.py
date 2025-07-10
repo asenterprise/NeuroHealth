@@ -1,11 +1,13 @@
 import html
 import asyncpg
-from fastapi import APIRouter, Request, HTTPException, Form, Depends
+from fastapi import APIRouter, Request, HTTPException, Form, Depends, Response
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, JSONResponse
 from app.utils.parser import parse_lecture
 from app.db.queries import get_db_connection, add_lecture, add_sections
 from app.services.json_services import process_lecture_json
+from app.qdrant.indexer import reindex
+from app.qdrant.client import recreate_collections
 
 router = APIRouter()
 
@@ -98,3 +100,10 @@ async def save_sections(json_data: dict, conn=Depends(get_db_connection)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error saving sections: {str(e)}")
+    
+
+@router.post("/reindex")
+async def trigger_reindex():
+    recreate_collections()
+    await reindex()
+    return {"status": "Reindexing completed"}
